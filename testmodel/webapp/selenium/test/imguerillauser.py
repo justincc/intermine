@@ -33,10 +33,7 @@ class IMGuerillaUser:
         url = "http://api.guerrillamail.com/ajax.php?f=set_email_user&email_users=" + self.name
         guerilla_result = requests.get(url)
         
-        try:
-            json = guerilla_result.json()
-        except:
-            raise SkipTest("Guerilla Mail Not working")
+        json = guerilla_result.json()
 
         self.guerilla = json
 
