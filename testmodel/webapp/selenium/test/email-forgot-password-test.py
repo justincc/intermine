@@ -50,10 +50,12 @@ class EmailForgotPasswordTest(Super):
         username_input.send_keys(self.im_guerilla_user.name)
         request_password_button = browser.find_element_by_xpath('//form[@id="requestPasswordForm"]//input[@name="action"]').click()
 
-        time.sleep(10)
+        time.sleep(20)
 
         # Get out user's latest email.
         last_mail = self.im_guerilla_user.get_last_mail()
+
+        print "last_mail", last_mail
         mail_body = last_mail["mail_body"].decode('string_escape')
 
         # Parse our password reset link
