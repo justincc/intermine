@@ -30,7 +30,7 @@ class IMGuerillaUser:
         self.name += epoch_time
         self.name += rhash
 
-        url = "http://api.guerrillamail.com/ajax.php?f=set_email_user&email_users=" + self.name
+        url = "http://api.guerrillamail.com/ajax.php?f=set_email_user&email_user=" + self.name
         guerilla_result = requests.get(url)
         
         json = guerilla_result.json()
