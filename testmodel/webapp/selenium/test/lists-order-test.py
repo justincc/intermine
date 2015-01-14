@@ -27,7 +27,7 @@ class ListsOrder(Super):
     def test_lists_order(self):
 
         config = ConfigParser.RawConfigParser(allow_no_value=True)
-        with open("../../../testmodel.properties") as ifh:
+        with open("../../testmodel.properties") as ifh:
             config.readfp(Helper("Foo", ifh))
         su_name = config.get("Foo", "superuser.account")
         su_password = config.get("Foo", "superuser.initialPassword")
