@@ -100,7 +100,8 @@ class ListsOrder(Super):
         self.browser.find_element_by_id("pasteInput").send_keys("EmployeeA1, EmployeeA2, EmployeeA3")
         self.browser.find_element_by_id("submitBag").click()
         custom_list_name = name
-        bagname = self.browser.find_element_by_id("newBagName")
+        bagname = self.wait_for_elem("#newBagName")
+        # bagname = self.browser.find_element_by_id("newBagName")
         bagname.clear()
         bagname.send_keys(custom_list_name)
         button = self.wait_for_elem("iframe")

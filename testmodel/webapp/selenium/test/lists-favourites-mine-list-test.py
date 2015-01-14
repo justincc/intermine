@@ -37,7 +37,8 @@ class ListFavourites(Super):
 
         # Set the name to something we know
         custom_list_name = "CustomList1"
-        bagname = self.browser.find_element_by_id("newBagName")
+        # bagname = self.browser.find_element_by_id("newBagName")
+        bagname = self.wait_for_elem("#newBagName")
         bagname.clear()
         bagname.send_keys(custom_list_name)
 
