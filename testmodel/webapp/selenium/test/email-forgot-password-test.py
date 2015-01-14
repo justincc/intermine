@@ -5,17 +5,19 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from imguerillauser import IMGuerillaUser
+from nose.plugins.skip import SkipTest
 import xml.etree.ElementTree as ET
 import unittest, re, time
 
 class EmailForgotPasswordTest(Super):
 
     def setUp(self):
+        raise SkipTest # EMAIL until we have a mock email server setup
         Super.setUp(self)
         self.im_guerilla_user = IMGuerillaUser("password");
         self.im_guerilla_user.create()
 
-    def test_email_forgot_link(self):
+    def test_email_forgot_password_link(self):
         # Create a second web driver for the sharee account
         browser = self.browser
 
