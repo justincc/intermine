@@ -1253,9 +1253,9 @@ to will also be returned.
         <method type="GET" authenticationRequired="false">
            <summary>Get the fields used to summarise the class</summary>
            <param type="Boolean" required="false" default="false" description="Whether to exclude references from the summary fields">norefs</param>
-        <returns>
-          <format key="classes">json</format>
-        </returns>
+         <returns>
+           <format key="classes">json</format>
+         </returns>
        </method>
     </metadata>
   </servlet-mapping>
@@ -1479,9 +1479,9 @@ to will also be returned.
         <method type="GET" authenticationRequired="false" ALSO="POST">
             <summary>get the data to produce a graph</summary>
             <description>
-            This service returns data that can be passed to charting software, such
-            as Google's javascript Charts API, to produce graphical representations
-            of the overview of data in a list.
+             This service returns data that can be passed to charting software, such
+             as Google's javascript Charts API, to produce graphical representations
+             of the overview of data in a list.
           </description>
             <param type="String"
                 required="true"
@@ -2068,9 +2068,15 @@ following [json-schema](http://json-schema.org/) schema:
   </servlet>
 
   <servlet-mapping>
+<<<<<<< HEAD
     <servlet-name>ws-sequence</servlet-name>
     <url-pattern>/service/sequence/*</url-pattern>
     <metadata>
+=======
+     <servlet-name>ws-sequence</servlet-name>
+     <url-pattern>/service/sequence/*</url-pattern>
+     <metadata>
+>>>>>>> beta
         <name>Sequence Access</name>
         <minVersion>13</minVersion>
         <method authenticationRequired="false" type="GET" also="POST">
@@ -3049,6 +3055,16 @@ The different token types are:
   </filter-mapping>
 
   <filter>
+      <filter-name>SessionlessRequests</filter-name>
+      <filter-class>org.intermine.webservice.server.filter.RequestSubClassFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+      <filter-name>SessionlessRequests</filter-name>
+      <url-pattern>/service/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
   <filter-name>AllowCORSWebServiceRequests</filter-name>
   <filter-class>org.intermine.web.filters.HeaderFilter</filter-class>
       <init-param>
@@ -3108,6 +3124,10 @@ The different token types are:
     <url-pattern>*.css</url-pattern>
   </filter-mapping>
 
+<<<<<<< HEAD
+=======
+  <!-- The cachable WS responses are configured here. -->
+>>>>>>> beta
   <filter>
     <filter-name>ReleaseEtags</filter-name>
     <filter-class>org.intermine.web.filters.ReleaseEtagFilter</filter-class>
@@ -3116,8 +3136,41 @@ The different token types are:
   <filter-mapping>
     <filter-name>ReleaseEtags</filter-name>
     <servlet-name>ws-model</servlet-name>
+<<<<<<< HEAD
     <dispatcher>REQUEST</dispatcher>
     <dispatcher>FORWARD</dispatcher>
+=======
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>ReleaseEtags</filter-name>
+    <servlet-name>ws-summary-fields</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>ReleaseEtags</filter-name>
+    <servlet-name>ws-classkeys</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>ReleaseEtags</filter-name>
+    <servlet-name>ws-code-gen</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>ReleaseEtags</filter-name>
+    <servlet-name>ws-service-listing</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping> <!-- Does not include user data, and over read-only db -->
+    <filter-name>ReleaseEtags</filter-name>
+    <servlet-name>ws-quick-search</servlet-name>
+  </filter-mapping>
+
+  <filter-mapping> <!-- NB: if we ever make widgets dynamic, this will have to change. -->
+    <filter-name>ReleaseEtags</filter-name>
+    <servlet-name>ws-available-widgets</servlet-name>
+>>>>>>> beta
   </filter-mapping>
 
  <filter>
