@@ -12,28 +12,22 @@ package org.intermine.bio.dataconversion;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.biopax.paxtools.controller.PropertyEditor;
-import org.biopax.paxtools.controller.SimpleEditorMap;
-import org.biopax.paxtools.controller.Traverser;
-import org.biopax.paxtools.controller.Visitor;
+import org.biopax.paxtools.controller.PathAccessor;
+import org.biopax.paxtools.io.BioPAXIOHandler;
 import org.biopax.paxtools.io.jena.JenaIOHandler;
-import org.biopax.paxtools.model.BioPAXElement;
 import org.biopax.paxtools.model.BioPAXLevel;
 import org.biopax.paxtools.model.Model;
-import org.biopax.paxtools.model.level3.Named;
 import org.biopax.paxtools.model.level3.Pathway;
 import org.biopax.paxtools.model.level3.Xref;
 import org.intermine.bio.util.OrganismData;
@@ -46,26 +40,14 @@ import org.intermine.xml.full.Item;
  *
  * @author Julie Sullivan
  */
-public class BioPAXConverter extends BioFileConverter implements Visitor
+public class BioPAXConverter extends BioFileConverter
 {
     private static final Logger LOG = Logger.getLogger(BioPAXConverter.class);
-    private static final String DEFAULT_DB_NAME = "UniProt";
-    private String dbName = DEFAULT_DB_NAME;
-    private String identifierField = "primaryAccession"; // default value, can be overridden
-    private String bioentityType = "Protein"; // default value, can be overridden
-    private Map<String, Item> bioentities = new HashMap<String, Item>();
-    private Traverser traverser;
-    private Set<BioPAXElement> visited = new HashSet<BioPAXElement>();
-    private Item organism, dataset;
-    private String pathwayRefId = null;
+    private String organismRefId = null;
     private Set<String> taxonIds = new HashSet<String>();
     private OrganismRepository or;
-    private String dataSourceRefId = null;
-    private String curated = "false"; // default value, can be overridden
-    private Map<String, Config> configs = new HashMap<String, Config>();
-    private static final String PROP_FILE = "biopax_config.properties";
-    private static String xrefPrefix = "REACT_"; // default value, can be overridden
-    private Map<String, String> pathways = new HashMap<String, String>();
+    private Map<String, Item> pathways = new HashMap<String, Item>();
+    private Map<String, String> proteins = new HashMap<String, String>();
 
     /**
      * Constructor
@@ -77,50 +59,7 @@ public class BioPAXConverter extends BioFileConverter implements Visitor
     public BioPAXConverter(ItemWriter writer, org.intermine.metadata.Model intermineModel)
         throws ObjectStoreException {
         super(writer, intermineModel);
-        traverser = new Traverser(SimpleEditorMap.L3, this);
-        readConfig();
         or = OrganismRepository.getOrganismRepository();
-    }
-
-    private void readConfig() {
-        Properties props = new Properties();
-        try {
-            props.load(getClass().getClassLoader().getResourceAsStream(PROP_FILE));
-        } catch (IOException e) {
-            throw new RuntimeException("Problem loading properties '" + PROP_FILE + "'", e);
-        }
-        for (Map.Entry<Object, Object> entry: props.entrySet()) {
-            String key = (String) entry.getKey();
-            String value = ((String) entry.getValue()).trim();
-
-            String[] attributes = key.split("\\.");
-            if (attributes.length != 2) {
-                throw new RuntimeException("Problem loading properties '" + PROP_FILE + "' on line "
-                        + key);
-            }
-            String taxonId = attributes[0];
-            String identifier = attributes[1];
-
-            // xref prefix determines which XREF in file to use, eg which identifier
-            // default is REACT_
-            if ("xref".equals(taxonId)) {
-                xrefPrefix = value;
-                continue;
-            }
-
-            Config config = configs.get(taxonId);
-            if (config == null) {
-                config = new Config();
-                configs.put(taxonId, config);
-            }
-
-            if ("bioentity".equals(identifier)) {
-                config.setBioentity(value);
-            } else {
-                config.setIdentifier(identifier);
-                config.setDb(value);
-            }
-        }
     }
 
     /**
@@ -133,29 +72,44 @@ public class BioPAXConverter extends BioFileConverter implements Visitor
             // this file isn't from an organism specified in the project file
             return;
         }
-        setDataset();
-        setOrganism(taxonId);
-        setConfig(taxonId);
+        organismRefId = getOrganism(taxonId);
 
         // navigate through the owl file
-        JenaIOHandler jenaIOHandler = new JenaIOHandler(null, BioPAXLevel.L3);
-        Model model = jenaIOHandler.convertFromOWL(new FileInputStream(getCurrentFile()));
-        Set<Pathway> pathwaySet = model.getObjects(Pathway.class);
+        BioPAXIOHandler handler = new JenaIOHandler(BioPAXLevel.L3);
+        Model model = handler.convertFromOWL(new FileInputStream(getCurrentFile()));
 
-        for (Pathway pathwayObj : pathwaySet) {
-            try {
-                pathwayRefId = getPathway(pathwayObj);
-            } catch (ObjectStoreException e) {
-                pathwayRefId = null;
-                continue;
+        for (Pathway pathway : model.getObjects(Pathway.class)) {
+            PathAccessor pathAccessor = new PathAccessor(
+                    "Pathway/pathwayComponent*/participant*:Protein/entityReference");
+
+            String pathwayName = pathway.getDisplayName();
+            Item pathwayItem = getPathway(pathwayName);
+            Set<Xref> unificationXrefs = pathAccessor.getValueFromBean(pathway);
+            for (Xref xref : unificationXrefs) {
+                String accession = xref.getId();
+                String refId = proteins.get(accession);
+                if (refId == null) {
+                    Item item = createItem("Protein");
+                    item.setAttribute("primaryAccession", accession);
+                    item.setReference("organism", organismRefId);
+                    store(item);
+                    refId = item.getIdentifier();
+                    proteins.put(accession, refId);
+                    pathwayItem.addToCollection("proteins", item);
+                }
             }
-            if (pathwayRefId == null) {
-                // will happen if no stable ID, eg. REACT_123
-                continue;
-            }
-            visited = new HashSet<BioPAXElement>();
-            traverser.traverse(pathwayObj, model);
         }
+    }
+
+    private Item getPathway(String pathwayName) throws ObjectStoreException {
+        Item item = pathways.get(pathwayName);
+        if (item == null) {
+            item = createItem("Pathway");
+            item.setAttribute("name", pathwayName);
+            store(item);
+            pathways.put(pathwayName, item);
+        }
+        return item;
     }
 
 
@@ -169,191 +123,6 @@ public class BioPAXConverter extends BioFileConverter implements Visitor
         LOG.info("Setting list of organisms to " + this.taxonIds);
     }
 
-    /**
-     * @param curated true or false
-     */
-    public void setBiopaxCurated(String curated) {
-        this.curated = curated;
-    }
-
-    /**
-     * @param name name of datasource
-     * @throws ObjectStoreException if storing datasource fails
-     */
-    public void setBiopaxDatasourcename(String name)
-        throws ObjectStoreException {
-        Item datasource = createItem("DataSource");
-        datasource.setAttribute("name", name);
-        try {
-            store(datasource);
-        } catch (ObjectStoreException e) {
-            throw new ObjectStoreException(e);
-        }
-        dataSourceRefId = datasource.getIdentifier();
-    }
-
-    /**
-     *
-     * @param title data set title
-     * @throws ObjectStoreException can't store
-     */
-    public void setBiopaxDatasetname(String title)
-        throws ObjectStoreException {
-        dataset = createItem("DataSet");
-        dataset.setAttribute("name", title);
-    }
-
-    /**
-     * Adds the BioPAX element into the model and traverses the element for its dependent elements.
-     *
-     * @param domain    the BioPAX element to be added into the model
-     * @param range Provenance, such as http://www.reactome.org/biopax/56210#PathwayStep1240
-     * @param model  model into which the element will be added
-     * @param editor editor that is going to be used for traversing functionallity
-     * @see org.biopax.paxtools.controller.Traverser
-     */
-    public void visit(BioPAXElement domain, Object range, Model model,
-            PropertyEditor<?, ?> editor) {
-
-        if (range != null && range instanceof BioPAXElement) {
-            BioPAXElement bpe = (BioPAXElement) range;
-            if (bpe instanceof Named) {
-                Named entity = (Named) bpe;
-                String className = entity.getModelInterface().getSimpleName();
-                if ("ProteinReference".equalsIgnoreCase(className)
-                        && StringUtils.isNotEmpty(pathwayRefId)) {
-                    processProteinEntry(entity);
-                }
-            }
-            if (!visited.contains(bpe)) {
-                visited.add(bpe);
-                traverser.traverse(bpe, model);
-            }
-        }
-    }
-
-    private void processProteinEntry(Named entity) {
-        Set<String> identifierSet = entity.getName(); // multiple names
-        String idWithDBPrefix = null;
-
-        for (String identifier : identifierSet) {
-            if (identifier.contains(DEFAULT_DB_NAME)) {
-                idWithDBPrefix = identifier;
-            }
-        }
-
-        if (idWithDBPrefix != null) {
-            processBioentity(idWithDBPrefix, pathwayRefId);
-        } else { // Example?
-            Set<Xref> uniXrefs = entity.getXref();
-            for (Xref xref : uniXrefs) {
-                String identifier = xref.getRDFId();
-                if (identifier.contains(DEFAULT_DB_NAME)) {
-                    processBioentity(identifier, pathwayRefId);
-                }
-            }
-        }
-    }
-
-    private void processBioentity(String xref, String pathway) {
-
-        // db source for this identifier, eg. UniProt, FlyBase
-        String identifierSource = (xref.contains(dbName) ? dbName : DEFAULT_DB_NAME);
-
-        if (StringUtils.isEmpty(identifierSource)) {
-            return;
-        }
-
-        // remove prefix, eg. UniProt or ENSEMBL
-        String accession = StringUtils.substringAfter(xref, identifierSource + ":");
-
-        if (accession.contains(" ")) {
-            accession = accession.split(" ")[0];
-        }
-
-        if (accession == null || accession.length() < 2) {
-            LOG.warn(bioentityType + " not stored:" + xref);
-            return;
-        }
-
-        Item item = getBioentity(accession);
-        item.addToCollection("pathways", pathway);
-        return;
-    }
-
-    private String getPathway(Pathway pathway)
-        throws ObjectStoreException {
-        for (Xref xref : pathway.getXref()) {
-            String xrefId = xref.getId();
-            if (StringUtils.isNotEmpty(xrefId) && xrefId.startsWith(xrefPrefix)) {
-                String identifier = xrefId.substring(xrefPrefix.length());
-                String refId = pathways.get(identifier);
-                if (refId == null) {
-                    Item item = createItem("Pathway");
-                    item.setAttribute("identifier", identifier);
-                    item.setAttribute("name", pathway.getDisplayName());
-                    String comment = getComment(pathway.getComment());
-                    if (StringUtils.isNotEmpty(comment)) {
-                        item.setAttribute("description", comment);
-                    }
-                    item.setAttribute("curated", curated);
-                    item.addToCollection("dataSets", dataset);
-                    store(item);
-                    refId = item.getIdentifier();
-                    pathways.put(identifier, refId);
-                }
-                return refId;
-            }
-        }
-        LOG.warn("couldn't process pathway " + pathway.getDisplayName());
-        return null;
-    }
-
-    private String getComment(Set<String> comments) {
-        if (comments == null || comments.isEmpty()) {
-            return null;
-        }
-        StringBuilder comment = new StringBuilder();
-        for (String c : comments) {
-            comment.append(c);
-        }
-        return comment.toString();
-    }
-
-    private Item getBioentity(String identifier) {
-        Item item = bioentities.get(identifier);
-        if (item == null) {
-            item = createItem(bioentityType);
-            item.setAttribute(identifierField, identifier);
-            item.setReference("organism", organism);
-            item.addToCollection("dataSets", dataset);
-            bioentities.put(identifier, item);
-        }
-        return item;
-    }
-
-    private void setOrganism(String taxonId)
-        throws ObjectStoreException {
-        organism = createItem("Organism");
-        organism.setAttribute("taxonId", taxonId);
-        try {
-            store(organism);
-        } catch (ObjectStoreException e) {
-            throw new ObjectStoreException(e);
-        }
-    }
-
-    private void setDataset()
-        throws ObjectStoreException {
-        if (dataset.getReference("dataSource") == null) {
-            dataset.setReference("dataSource", dataSourceRefId);
-            try {
-                store(dataset);
-            } catch (ObjectStoreException e) {
-                throw new ObjectStoreException(e);
-            }
-        }
-    }
 
     /**
      * Use the file name currently being processed to divine the name of the organism.  Return null
@@ -416,17 +185,8 @@ public class BioPAXConverter extends BioFileConverter implements Visitor
     @Override
     public void close()
         throws ObjectStoreException {
-        for (Item item : bioentities.values()) {
+        for (Item item : pathways.values()) {
             store(item);
-        }
-    }
-
-    private void setConfig(String taxonId) {
-        Config config = configs.get(taxonId);
-        if (config != null) {
-            dbName = config.getDb();
-            identifierField = config.getIdentifier();
-            bioentityType = config.getBioentity();
         }
     }
 

@@ -54,8 +54,6 @@ public class BioPAXConverterTest extends MockItemsTestCase
         String input = IOUtils.toString(loader.getResourceAsStream(TEST_FILE));
 
         File currentFile = new File(getClass().getClassLoader().getResource(TEST_FILE).toURI());
-        converter.setBiopaxDatasourcename("Reactome");
-        converter.setBiopaxDatasetname("Reactome data set");
         converter.setCurrentFile(currentFile);
         converter.setBiopaxOrganisms(TAXON_ID);
         converter.process(new StringReader(input));
