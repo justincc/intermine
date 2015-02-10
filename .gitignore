@@ -194,6 +194,7 @@ productionLog
 
 # mines
 malariamine/
+biotestmine/project.xml
 
 # IDEs
 nbproject/
@@ -203,4 +204,4 @@ apache-tomcat*
 prefixed
 failures.list
 *.jks
-biotestmine/project.xml
+.externalToolBuilders

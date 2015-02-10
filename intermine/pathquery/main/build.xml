@@ -11,13 +11,5 @@
       <classpath refid="project.compile.path"/>
     </antlr>
   </target>
-
-
-
-    <target name="hello">
-        <echo>Hello, from Ant</echo>
-    </target>
-
-
 </project>
 
