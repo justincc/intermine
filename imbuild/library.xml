@@ -127,22 +127,6 @@
 
   <target name="compile" depends="-init-compile, generate, -pre-compile, do-compile, -post-compile"/>
 
-  <!-- JAR -->
-
-  <target name="-pre-jar"/>
-
-  <target name="-post-jar"/>
-
-  <target name="-init-jar" depends="init, -init-deps">
-    <mkdir dir="${dist.dir}"/>
-  </target>
-
-  <target name="do-jar" depends="-init-presetdef-jar">
-    <lib:jar/>
-  </target>
-
-  <target name="jar" depends="compile, -init-jar, -pre-jar, do-jar, -post-jar"/>
-
 
   <!-- ACTION -->
 
@@ -158,27 +142,6 @@
 
   <target name="action" depends="compile, jar, -init-action, -pre-action, do-action, -post-action"/>
 
-
-  <!-- JAVADOC -->
-
-  <target name="-init-javadoc" depends="init, -init-deps">
-    <mkdir dir="${build.javadoc.dir}"/>
-  </target>
-
-  <target name="-javadoc-build" depends="-init-javadoc">
-    <javadoc destdir="${build.javadoc.dir}" source="${javac.source}" notree="${javadoc.notree}"
-            use="${javadoc.use}" nonavbar="${javadoc.nonavbar}" noindex="${javadoc.noindex}"
-            splitindex="${javadoc.splitindex}" author="${javadoc.author}" version="${javadoc.version}"
-            windowtitle="${javadoc.windowtitle}" private="${javadoc.private}"
-            additionalparam="${javadoc.additionalparam}" failonerror="true">
-      <classpath refid="project.compile.path"/>
-      <sourcepath>
-        <pathelement location="${src.dir}" />
-      </sourcepath>
-    </javadoc>
-  </target>
-
-  <target name="javadoc" depends="-init-javadoc,-javadoc-build"/>
 
   <!-- CHECKSTYLE -->
 
@@ -220,24 +183,6 @@
   </target>
 
 
-  <!-- CLEAN -->
-
-  <target name="-pre-clean"/>
-
-  <target name="clean" depends="-pre-clean, -pre-init">
-    <delete dir="${build.dir}"/>
-    <delete dir="${dist.dir}"/>
-    <delete>
-      <fileset dir="." includes="velocity.log*, intermine.log*"/>
-    </delete>
-  </target>
-
-  <target name="-pre-clean-all"/>
-
-  <target name="clean-all" depends="-pre-clean-all, clean">
-    <property name="no.dep" value="false"/>
-    <dependencies basedir="${library.xml.basedir}/.." target="clean"/>
-  </target>
 
   <target name="-init-macrodef-javac">
     <macrodef name="javac" uri="http://www.intermine.org/ns/im-lib-proj/1">
@@ -272,15 +217,4 @@
     </presetdef>
   </target>
 
-  <target name="dot" depends="init, -init-deps">
-    <path id="dot.class.path">
-      <path refid="project.compile.path"/>
-      <pathelement location="${build.classes.dir}"/>
-      <pathelement location="${library.xml.basedir}/lib/im-ant-tasks.jar"/>
-    </path>
-
-    <taskdef name="dot" classname="org.intermine.task.InheritanceDotTask" classpathref="dot.class.path"/>
-    <dot directory="${src.dir}" packageName="org.intermine" file="src.dot" omit="java.io.Serializable,java.lang.Object" boring="java.lang.Object"/>
-
-  </target>
 </project>
