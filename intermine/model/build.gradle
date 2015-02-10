@@ -24,10 +24,10 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDir 'src/org/intermine'
+            srcDir 'main/src'
         }
         resources {
-            srcDir 'resources'
+            srcDir 'main/resources'
         }
     }
 }
