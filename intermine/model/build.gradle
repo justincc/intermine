@@ -25,4 +25,13 @@ sourceSets {
             srcDir 'main/resources'
         }
     }
+
+    test {
+        java {
+            srcDir 'test/src'
+        }
+        resources {
+            srcDir 'test/resources'
+        }
+    }
 }

@@ -8,14 +8,14 @@ repositories {
 }
 
 dependencies {
-    compile project(':model')
     compile 'antlr:antlr:2.7.6'
     compile 'stax:stax-api:1.0.1'
     compile 'stax:stax:1.2.0'
-
     compile 'asm:asm-util:3.3.1'
     compile 'asm:asm:3.3.1'
     compile 'org.json:json:20141113'
+    compile project(':model')
+    
     testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 
@@ -26,6 +26,15 @@ sourceSets {
         }
         resources {
             srcDir 'main/resources'
+        }
+    }
+
+    test {
+        java {
+            srcDir 'test/src'
+        }
+        resources {
+            srcDir 'test/resources'
         }
     }
 }
