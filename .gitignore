@@ -13,6 +13,8 @@ executeLog*
 productionLog
 *~
 .gradle
+.project
+.classpath
 
 # /intermine/objectstore/main/
 /intermine/objectstore/main/src.png
