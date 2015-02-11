@@ -1,18 +1,21 @@
-ant.importBuild 'build.xml'
+ant.importBuild 'main/build.xml'
 
 apply plugin:'java'
+apply plugin: 'eclipse'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-
     compile project(':model')
-
+    compile 'antlr:antlr:2.7.6'
     compile 'stax:stax-api:1.0.1'
     compile 'stax:stax:1.2.0'
 
+    compile 'asm:asm-util:3.3.1'
+    compile 'asm:asm:3.3.1'
+    compile 'org.json:json:20141113'
     testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 
