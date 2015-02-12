@@ -15,7 +15,7 @@ dependencies {
     compile 'org.json:json:20141113'
     compile project(':model')
 
-    antlr 'antlr:antlr:2.7.7'
+    antlr 'antlr:antlr:2.7.6'
 
     testCompile group: 'junit', name: 'junit', version: '4.+'
 }
@@ -23,11 +23,14 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDir 'main/src'
+            srcDirs 'main/src', 'main/build'
         }
         resources {
             srcDir 'main/resources'
         }
+        antlr {
+            srcDirs 'main/src'
+        }  
     }
 
     test {
