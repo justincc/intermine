@@ -8,6 +8,15 @@ repositories {
 
 dependencies {
     compile project(':model')
+    compile files('./main/lib/base64.jar')
+    compile 'com.zaxxer:HikariCP-java6:2.3.2'
+    compile 'org.postgresql:postgresql:9.3-1103-jdbc4'
+    compile 'org.apache.ant:ant:1.9.4'
+    compile 'net.iharder:base64:2.3.8'
+    compile 'net.sf.opencsv:opencsv:2.3'
+    compile 'org.apache.torque:torque:4.0'
+    compile 'torque:torque-gen:3.3'
+    compile 'commons-beanutils:commons-beanutils:1.9.2'
 
     antlr 'antlr:antlr:2.7.7'
 
