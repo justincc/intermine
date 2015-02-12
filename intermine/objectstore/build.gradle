@@ -2,6 +2,7 @@ apply plugin: 'antlr'
 dependencies {
     compile project(':model')
     compile files('./main/lib/base64.jar')
+    antlr 'antlr:antlr:2.7.7'
     compile 'com.zaxxer:HikariCP-java6:2.3.2'
     compile 'org.postgresql:postgresql:9.3-1103-jdbc4'
     compile 'org.apache.ant:ant:1.9.4'
