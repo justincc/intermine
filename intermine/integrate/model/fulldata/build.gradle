@@ -1,0 +1,32 @@
+
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile project(':objectstore')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'main/src'
+        }
+        resources {
+            srcDir 'main/resources'
+        }
+    }
+
+    test {
+        java {
+            srcDir 'test/src'
+        }
+        resources {
+            srcDir 'test/resources'
+        }
+    }
+}

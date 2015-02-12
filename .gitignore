@@ -15,6 +15,7 @@ productionLog
 .gradle
 .project
 .classpath
+.externalToolBuilders
 
 # /intermine/objectstore/main/
 /intermine/objectstore/main/src.png
