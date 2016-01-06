@@ -1,6 +1,8 @@
 InterMine
 ============
 
+THIS IS A TEST
+
 Master: [![Build Status: master][travis-badge-master]][ci]
 Dev: [![Build Status: dev][travis-badge-dev]][ci]
 
